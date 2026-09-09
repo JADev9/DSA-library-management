@@ -112,37 +112,109 @@ service /library on new http:Listener(8080) {
         }
 
         return overdueAssets;
+   }
+
+   resource function post assets/[string assetTag]/schedules(@http:Payload Schedule newSchedule)
+            returns Asset|http:NotFound{
+              
+        if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{
+                   body: string `No asset with tag ${assetTag}`
+           };
+       }
+       Asset asset = assetStore.get(assetTag);
+       asset.schedules.push(newSchedule);
+       assetStore[assetTag] = asset;
+
+       return asset;
     }
-    resource function post assets/[string assetTag]/components(@http:Payload Component newComponent)
-    returns Asset|http:NotFound{
-        if !assetStore.hasKey(assetTag){
-            return<http:NotFound>{
-                body:string `No asset with tag ${assetTag}`
-            };
-            }
-            Asset asset = assetStore.get(assetTag);
-            asset.components.push(newComponent);
-            assetStore[assetTag]=asset;
-            return asset;
-    
+    resource function delete assets/[string assetTag]/schedules/[string scheduleId]()
+            returns Asset|http:NotFound{
+
+       if !assetStore.hasKey(assetTag){
+           return <http:NotFound>{
+               body: string `No asset with tag ${assetTag}`
+      };
     }
-    
-      resource function delete asset/[string assetTag]/components/[string compId]()
-      returns Asset|http:NotFound{
-        if !assetStore.hasKey(assetTag){
-            return<http:NotFound>{
-                body: string `No asset with tag ${assetTag}`
-      
-            };
-        }
-      
+
       Asset asset = assetStore.get(assetTag);
-      asset.components = asset.components.filter(c => c.compId != compId);
+      asset.schedules = asset.schedules.filter(s => s.scheduleId != scheduleId);
       assetStore[assetTag] = asset;
 
       return asset;
-
     }
+
+    resource function post assets/[string assetTag]/components(@http:Payload Component newComponent)
+            returns Asset|http:NotFound {
+
+        if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{
+                body: string `No asset with tag ${assetTag}`
+            };
+        }
+
+        Asset asset = assetStore.get(assetTag);
+        asset.components.push(newComponent);
+        assetStore[assetTag] = asset;
+
+        return asset;
+    }
+
+    resource function delete assets/[string assetTag]/components/[string compId]()
+            returns Asset|http:NotFound {
+
+        if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{
+                body: string `No asset with tag ${assetTag}`
+            };
+        }
+
+        Asset asset = assetStore.get(assetTag);
+        asset.components = asset.components.filter(c => c.compId != compId);
+        assetStore[assetTag] = asset;
+
+        return asset;
+    }
+}
+      Asset asset = assetStore.get(assetTag);
+      asset.schedules = asset.schedules.filter(s => s.scheduleId != scheduleId);
+      assetStore[assetTag] = asset;
+
+      return asset;
+    }
+
+    resource function post assets/[string assetTag]/components(@http:Payload Component newComponent)
+            returns Asset|http:NotFound {
+
+        if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{
+                body: string `No asset with tag ${assetTag}`
+            };
+        }
+
+        Asset asset = assetStore.get(assetTag);
+        asset.components.push(newComponent);
+        assetStore[assetTag] = asset;
+
+        return asset;
+    }
+
+    resource function delete assets/[string assetTag]/components/[string compId]()
+            returns Asset|http:NotFound {
+
+        if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{
+                body: string `No asset with tag ${assetTag}`
+            };
+        }
+
+        Asset asset = assetStore.get(assetTag);
+        asset.components = asset.components.filter(c => c.compId != compId);
+        assetStore[assetTag] = asset;
+
+        return asset;
+    }
+  }
 }
         
     
