@@ -175,4 +175,61 @@ service /library on new http:Listener(8080) {
 
         return asset;
     }
+ 
+        resource function post assets/[string assetTag]/workorders(@http:Payload WorkOrder newOrder)
+        returns Asset|http:NotFound {
+
+             if !assetStore.hasKey(assetTag) {
+                 return <http:NotFound>{body: string `No asset with tag ${assetTag}`};
+             }
+    
+             Asset asset = assetStore.get(assetTag);
+             asset.workOrders.push(newOrder);
+             assetStore[assetTag] = asset;
+
+             return asset;
+        }
+
+        resource function post assets/[string assetTag]/workorders/[string orderId]/tasks(@http:Payload Task newTask)
+            returns Asset|http:NotFound {
+
+            if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{body: string `No asset with tag ${assetTag}`};
+            }
+
+            Asset asset = assetStore.get(assetTag);
+ 
+            foreach int i in 0 ..< asset.workOrders.length() {
+                 if asset.workOrders[i].orderId == orderId {
+                    asset.workOrders[i].tasks.push(newTask);
+                    assetStore[assetTag] = asset;
+                    return asset;
+                 }
+            }
+     
+            return <http:NotFound>{body: string `No work order ${orderId}`};
+
+     }
+
+     resource function delete assets/[string assetTag]/workorders/[string orderId]/tasks/[string taskId]()
+            returns Asset|http:NotFound {
+         
+           if !assetStore.hasKey(assetTag) {
+            return <http:NotFound>{body: string `No asset with tag ${assetTag}`};
+        }
+     
+     Asset asset = assetStore.get(assetTag);
+       
+     foreach int i in 0 ..<asset.workOrders.length() {
+
+           if asset.workOrders[i].orderId == orderId {
+              asset.workOrders[i].tasks = asset.workOrders[i].tasks.filter(t => t.taskId != taskId);
+              assetStore [assetTag] = asset;
+              return asset;
+           }
+        }
+
+        return <http:NotFound>{body: string `No work order ${orderId}`};
+    } 
 }
+    
