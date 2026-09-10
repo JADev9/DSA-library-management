@@ -5,7 +5,7 @@ import ballerina/http;
 import ballerina/time;
 
 map<Asset> assetStore = {};
-
+map<Institution> institutionStore = {};
 service /library on new http:Listener(8080) {
 
 
@@ -231,5 +231,57 @@ service /library on new http:Listener(8080) {
 
         return <http:NotFound>{body: string `No work order ${orderId}`};
     } 
+
+resource function post institutions(@http:Payload  Institution newInstitution)
+       returns Institution|http:Conflict|http:BadRequest {
+
+       if newInstitution.institutionId.trim() == "" {
+            return <http:BadRequest>{body: "institutionId id required"};
+       }
+       
+       if institutionStore.hasKey(newInstitution.institutionId) {
+            return <http:Conflict>{
+                 body: string `Institution ${newInstitution.institutionId} already exists`
+            };
+       }
+
+       institutionStore[newInstitution.institutionId] = newInstitution;
+       return newInstitution;
+       }
+
+resource function get institutions() returns Institution[] {
+      return institutionStore.toArray();
+}
+resource function put institutions/[string institutionId](@http:Payload Institution updated)
+            returns Institution|http:NotFound {
+
+       if !institutionStore.hasKey(institutionId) {
+            return <http:NotFound>{body: string `No institution ${institutionId}`};
+        }
+
+        institutionStore[institutionId] = updated;
+        return updated;
+        }
+
+resource function delete institutions/[string institutionId]()
+            returns http:Ok|http:NotFound|http:Conflict {
+
+        if !institutionStore.hasKey(institutionId) {
+            return <http:NotFound>{body: string `No institution ${institutionId}`};
+        }
+           Institution inst = institutionStore.get(institutionId);
+        foreach Asset asset in assetStore.toArray() {
+            if asset.institution == inst.name {
+                return <http:Conflict>{
+                    body: string `Cannot delete ${inst.name} — assets still reference it`
+                };
+            }
+        }
+
+         _= institutionStore.remove(institutionId);
+         return <http:Ok>{body: "Institution deleted"};
+      }        
+
+
 }
     

@@ -38,3 +38,9 @@ public type Asset record {
     Schedule[] schedules = [];
     WorkOrder[] workOrders = [];
 };
+
+public type Institution record {
+    string institutionId;
+    string name;
+    string[] sites = [];
+};
