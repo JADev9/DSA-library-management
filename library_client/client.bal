@@ -11,7 +11,9 @@ public function main() returns error? {
         io:println("3. Delete an asset");
         io:println("4. View one asset");
         io:println("5. Assets by institution");
-        io:println("6. View overdue");      
+        io:println("6. View overdue");
+        io:println("7. Add a component");
+        io:println("8. View institutions");      
         io:println("0. Exit");
 
         string choice = io:readln("Choose an option: ");
@@ -27,7 +29,11 @@ public function main() returns error? {
         } else if choice == "5" {
             check viewByInstitution();
         } else if choice == "6" {
-            check viewOverdue();       
+            check viewOverdue();
+        } else if choice == "7" {
+            check addComponent();
+        } else if choice == "8" {
+            check viewInstitutions();       
         } else if choice == "0" {
             io:println("Goodbye.");
             break;
@@ -102,5 +108,30 @@ function viewOverdue() returns error? {
 
     foreach Asset asset in assets {
         io:println("OVERDUE: " + asset.assetTag + " | " + asset.name);
+    }
+}
+function addComponent() returns error? {
+    string tag = io:readln("Asset tag: ");
+
+    Component newComponent = {
+        compId: io:readln("Component ID: "),
+        name: io:readln("Component name: "),
+        description: io:readln("Description: ")
+    };
+
+    Asset updated = check libraryClient->post("/assets/" + tag + "/components", newComponent);
+    io:println("Component added. Asset now has " + updated.components.length().toString() + " component(s).");
+}
+
+function viewInstitutions() returns error? {
+    Institution[] institutions = check libraryClient->get("/institutions");
+
+    if institutions.length() == 0 {
+        io:println("No institutions found.");
+        return;
+    }
+
+    foreach Institution inst in institutions {
+        io:println(inst.institutionId + " | " + inst.name);
     }
 }
