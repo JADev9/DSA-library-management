@@ -9,7 +9,9 @@ public function main() returns error? {
         io:println("1. View all assets");
         io:println("2. Add a new asset");
         io:println("3. Delete an asset");
-        io:println("4. View one asset");              
+        io:println("4. View one asset");
+        io:println("5. Assets by institution");
+        io:println("6. View overdue");      
         io:println("0. Exit");
 
         string choice = io:readln("Choose an option: ");
@@ -21,7 +23,11 @@ public function main() returns error? {
         } else if choice == "3" {
             check deleteAsset();
         } else if choice == "4" {
-            check viewOneAsset();       
+            check viewOneAsset();
+        } else if choice == "5" {
+            check viewByInstitution();
+        } else if choice == "6" {
+            check viewOverdue();       
         } else if choice == "0" {
             io:println("Goodbye.");
             break;
@@ -71,4 +77,30 @@ function addAsset() returns error? {
          io:println("Institution: " + asset.institution + " | Site: " + asset.site);
       
 
+}
+function viewByInstitution() returns error? {
+    string institution = io:readln("Institution name: ");
+    Asset[] assets = check libraryClient->get("/institutions/" + institution + "/assets");
+
+    if assets.length() == 0 {
+        io:println("No assets found for " + institution);
+        return;
+    }
+
+    foreach Asset asset in assets {
+        io:println(asset.assetTag + " | " + asset.name + " | " + asset.site);
+    }
+}
+
+function viewOverdue() returns error? {
+    Asset[] assets = check libraryClient->get("/assets/overdue");
+
+    if assets.length() == 0 {
+        io:println("Nothing overdue.");
+        return;
+    }
+
+    foreach Asset asset in assets {
+        io:println("OVERDUE: " + asset.assetTag + " | " + asset.name);
+    }
 }
