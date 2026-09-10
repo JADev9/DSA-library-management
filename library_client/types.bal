@@ -44,3 +44,4 @@ public type Institution record {
     string name;
     string[] sites = [];
 };
+
