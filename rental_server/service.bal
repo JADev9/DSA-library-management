@@ -47,8 +47,24 @@ service "RentalService" on new grpc:Listener(9090) {
     }    
 
 
-    remote function remove_property(PropertyId value) returns PropertyResponse {
-        return {success: false, message: "not implemented", property: {propertyId: "", name: "", location: "", pricePerNight: 0.0, available: false}};
+        remote function remove_property(PropertyId value) returns PropertyResponse {
+
+        if !propertyStore.hasKey(value.propertyId) {
+            return {
+                success: false,
+                message: string `Property ${value.propertyId} not found`,
+                property: {propertyId: "", name: "", location: "", pricePerNight: 0.0, available: false}
+            };
+        }
+
+        Property removed = propertyStore.get(value.propertyId);
+        _ = propertyStore.remove(value.propertyId);
+
+        return {
+            success: true,
+            message: string `Property ${value.propertyId} removed`,
+            property: removed
+        };
     }
 
     remote function search_property(SearchRequest value) returns PropertyResponse {
