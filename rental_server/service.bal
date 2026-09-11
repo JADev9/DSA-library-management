@@ -28,8 +28,24 @@ service "RentalService" on new grpc:Listener(9090) {
     }
 
     remote function update_property(Property value) returns PropertyResponse {
-        return {success: false, message: "not implemented", property: value};
-    }
+
+        if !propertyStore.hasKey(value.propertyId) {
+            return {
+                success: false,
+                message: string `Property ${value.propertyId} not found`,
+                property: value
+            };
+        }
+
+        propertyStore[value.propertyId] = value;
+
+        return {
+            success: true,
+            message: "Property updated",
+            property: value
+        };
+    }    
+
 
     remote function remove_property(PropertyId value) returns PropertyResponse {
         return {success: false, message: "not implemented", property: {propertyId: "", name: "", location: "", pricePerNight: 0.0, available: false}};
