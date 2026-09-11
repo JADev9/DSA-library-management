@@ -86,8 +86,34 @@ service "RentalService" on new grpc:Listener(9090) {
         };
     }
 
-    remote function book_property(BookingRequest value) returns BookingResponse {
-        return {success: false, message: "not implemented", totalCost: 0.0, status: "PENDING"};
+        remote function book_property(BookingRequest value) returns BookingResponse {
+
+        if !propertyStore.hasKey(value.propertyId) {
+            return {
+                success: false,
+                message: string `Property ${value.propertyId} not found`,
+                totalCost: 0.0,
+                status: "REJECTED"
+            };
+        }
+
+        if value.endDate <= value.startDate {
+            return {
+                success: false,
+                message: "End date must be after start date",
+                totalCost: 0.0,
+                status: "REJECTED"
+            };
+        }
+
+        bookingStore[value.bookingId] = value;
+
+        return {
+            success: true,
+            message: "Added to booking cart",
+            totalCost: 0.0,
+            status: "PENDING"
+        };
     }
 
     remote function confirm_booking(BookingId value) returns BookingResponse {
