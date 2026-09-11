@@ -8,7 +8,7 @@ public type Component record {
 
 public type Schedule record {
     string scheduleId;
-    string 'type; // MAINTENANCE or BOOKING
+    string 'type;
     string dueDate;
     string description;
 };
@@ -27,7 +27,7 @@ public type WorkOrder record {
 };
 
 public type Asset record {
-    string assetTag; // unique key for the whole system
+    string assetTag;
     string name;
     string description;
     string institution;
@@ -45,3 +45,6 @@ public type Institution record {
     string[] sites = [];
 };
 
+public type WorkOrderStatus record {
+    string status;
+};
