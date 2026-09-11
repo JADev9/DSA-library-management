@@ -67,8 +67,23 @@ service "RentalService" on new grpc:Listener(9090) {
         };
     }
 
-    remote function search_property(SearchRequest value) returns PropertyResponse {
-        return {success: false, message: "not implemented", property: {propertyId: "", name: "", location: "", pricePerNight: 0.0, available: false}};
+        remote function search_property(SearchRequest value) returns PropertyResponse {
+
+        foreach Property p in propertyStore {
+            if p.location == value.location && p.available {
+                return {
+                    success: true,
+                    message: "Available",
+                    property: p
+                };
+            }
+        }
+
+        return {
+            success: false,
+            message: "Not Available",
+            property: {propertyId: "", name: "", location: "", pricePerNight: 0.0, available: false}
+        };
     }
 
     remote function book_property(BookingRequest value) returns BookingResponse {
