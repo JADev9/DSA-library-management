@@ -13,9 +13,12 @@ public function main() returns error? {
         io:println("5. Assets by institution");
         io:println("6. View overdue");
         io:println("7. Add a component");
-        io:println("8. View institutions"); 
+        io:println("8. View institutions");
         io:println("9. Add a schedule");
-        io:println("10. Add an institution");     
+        io:println("10. Add an institution");
+        io:println("11. Update work order status");
+        io:println("12. Modify a schedule");
+        io:println("13. Loan an asset");
         io:println("0. Exit");
 
         string choice = io:readln("Choose an option: ");
@@ -39,7 +42,13 @@ public function main() returns error? {
         } else if choice == "9" {
             check addSchedule();
         } else if choice == "10" {
-            check addInstitution();       
+            check addInstitution();
+        } else if choice == "11" {
+            check updateWorkOrderStatus();
+        } else if choice == "12" {
+            check modifySchedule();
+        } else if choice == "13" {
+            check loanAsset();
         } else if choice == "0" {
             io:println("Goodbye.");
             break;
@@ -72,24 +81,24 @@ function addAsset() returns error? {
         status: io:readln("Status: "),
         dateAcquired: io:readln("Date acquired (YYYY-MM-DD): ")
     };
-   
-       Asset created = check libraryClient->post("/assets", newAsset);
-       io:println("Created: " + created.assetTag);
-      }
-      function deleteAsset() returns error? {
-         string tag = io:readln("Asset tag to delete: ");
-         string response = check libraryClient->delete("/assets/" + tag);
-         io:println(response);
-      }
 
-      function viewOneAsset() returns error? {
-         string tag = io:readln("Asset tag: ");
-         Asset asset = check libraryClient->get("/assets/" + tag);
-         io:println(asset.assetTag + " | " + asset.name + " | " + asset.status);
-         io:println("Institution: " + asset.institution + " | Site: " + asset.site);
-      
-
+    Asset created = check libraryClient->post("/assets", newAsset);
+    io:println("Created: " + created.assetTag);
 }
+
+function deleteAsset() returns error? {
+    string tag = io:readln("Asset tag to delete: ");
+    string response = check libraryClient->delete("/assets/" + tag);
+    io:println(response);
+}
+
+function viewOneAsset() returns error? {
+    string tag = io:readln("Asset tag: ");
+    Asset asset = check libraryClient->get("/assets/" + tag);
+    io:println(asset.assetTag + " | " + asset.name + " | " + asset.status);
+    io:println("Institution: " + asset.institution + " | Site: " + asset.site);
+}
+
 function viewByInstitution() returns error? {
     string institution = io:readln("Institution name: ");
     Asset[] assets = check libraryClient->get("/institutions/" + institution + "/assets");
@@ -116,6 +125,7 @@ function viewOverdue() returns error? {
         io:println("OVERDUE: " + asset.assetTag + " | " + asset.name);
     }
 }
+
 function addComponent() returns error? {
     string tag = io:readln("Asset tag: ");
 
@@ -141,6 +151,7 @@ function viewInstitutions() returns error? {
         io:println(inst.institutionId + " | " + inst.name);
     }
 }
+
 function addSchedule() returns error? {
     string tag = io:readln("Asset tag: ");
 
@@ -164,4 +175,35 @@ function addInstitution() returns error? {
 
     Institution created = check libraryClient->post("/institutions", newInstitution);
     io:println("Created institution: " + created.name);
+}
+
+function updateWorkOrderStatus() returns error? {
+    string tag = io:readln("Asset tag: ");
+    string orderId = io:readln("Work order ID: ");
+    string status = io:readln("New status (OPEN/IN_PROGRESS/CLOSED): ");
+
+    WorkOrderStatus update = {status: status};
+    Asset updated = check libraryClient->put("/assets/" + tag + "/workorders/" + orderId, update);
+    io:println("Updated. Work order count: " + updated.workOrders.length().toString());
+}
+
+function modifySchedule() returns error? {
+    string tag = io:readln("Asset tag: ");
+    string scheduleId = io:readln("Schedule ID: ");
+
+    Schedule updated = {
+        scheduleId: scheduleId,
+        'type: io:readln("New type (MAINTENANCE/BOOKING): "),
+        dueDate: io:readln("New due date (YYYY-MM-DD): "),
+        description: io:readln("New description: ")
+    };
+
+    Asset result = check libraryClient->put("/assets/" + tag + "/schedules/" + scheduleId, updated);
+    io:println("Schedule updated. Total schedules: " + result.schedules.length().toString());
+}
+
+function loanAsset() returns error? {
+    string tag = io:readln("Asset tag to loan: ");
+    Asset updated = check libraryClient->post("/assets/" + tag + "/loan", {});
+    io:println("Asset " + updated.assetTag + " status is now: " + updated.status);
 }
