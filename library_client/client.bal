@@ -13,7 +13,9 @@ public function main() returns error? {
         io:println("5. Assets by institution");
         io:println("6. View overdue");
         io:println("7. Add a component");
-        io:println("8. View institutions");      
+        io:println("8. View institutions"); 
+        io:println("9. Add a schedule");
+        io:println("10. Add an institution");     
         io:println("0. Exit");
 
         string choice = io:readln("Choose an option: ");
@@ -33,7 +35,11 @@ public function main() returns error? {
         } else if choice == "7" {
             check addComponent();
         } else if choice == "8" {
-            check viewInstitutions();       
+            check viewInstitutions();
+        } else if choice == "9" {
+            check addSchedule();
+        } else if choice == "10" {
+            check addInstitution();       
         } else if choice == "0" {
             io:println("Goodbye.");
             break;
@@ -134,4 +140,28 @@ function viewInstitutions() returns error? {
     foreach Institution inst in institutions {
         io:println(inst.institutionId + " | " + inst.name);
     }
+}
+function addSchedule() returns error? {
+    string tag = io:readln("Asset tag: ");
+
+    Schedule newSchedule = {
+        scheduleId: io:readln("Schedule ID: "),
+        'type: io:readln("Type (MAINTENANCE or BOOKING): "),
+        dueDate: io:readln("Due date (YYYY-MM-DD): "),
+        description: io:readln("Description: ")
+    };
+
+    Asset updated = check libraryClient->post("/assets/" + tag + "/schedules", newSchedule);
+    io:println("Schedule added. Asset now has " + updated.schedules.length().toString() + " schedule(s).");
+}
+
+function addInstitution() returns error? {
+    Institution newInstitution = {
+        institutionId: io:readln("Institution ID: "),
+        name: io:readln("Institution name: "),
+        sites: []
+    };
+
+    Institution created = check libraryClient->post("/institutions", newInstitution);
+    io:println("Created institution: " + created.name);
 }
