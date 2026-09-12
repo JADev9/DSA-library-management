@@ -2,6 +2,7 @@ import ballerina/grpc;
 
 map<Property> propertyStore = {};
 map<BookingRequest> bookingStore = {};
+map<BookingRequest> confirmedBookings = {};
 
 @grpc:ServiceDescriptor {
     descriptor: PROPERTY_DESC
@@ -116,8 +117,54 @@ service "RentalService" on new grpc:Listener(9090) {
         };
     }
 
-    remote function confirm_booking(BookingId value) returns BookingResponse {
-        return {success: false, message: "not implemented", totalCost: 0.0, status: "PENDING"};
+        remote function confirm_booking(BookingId value) returns BookingResponse {
+
+        if !bookingStore.hasKey(value.bookingId) {
+            return {
+                success: false,
+                message: "No pending booking with that ID",
+                totalCost: 0.0,
+                status: "REJECTED"
+            };
+        }
+
+        BookingRequest req = bookingStore.get(value.bookingId);
+
+        if !propertyStore.hasKey(req.propertyId) {
+            return {
+                success: false,
+                message: "Property no longer exists",
+                totalCost: 0.0,
+                status: "REJECTED"
+            };
+        }
+
+        foreach BookingRequest b in confirmedBookings {
+            if b.propertyId == req.propertyId {
+                if !(req.endDate <= b.startDate || req.startDate >= b.endDate) {
+                    return {
+                        success: false,
+                        message: "Dates overlap with existing booking",
+                        totalCost: 0.0,
+                        status: "REJECTED"
+                    };
+                }
+            }
+        }
+
+        Property prop = propertyStore.get(req.propertyId);
+        int nights = daysBetween(req.startDate, req.endDate);
+        float cost = prop.pricePerNight * <float>nights;
+
+        confirmedBookings[req.bookingId] = req;
+        _ = bookingStore.remove(req.bookingId);
+
+        return {
+            success: true,
+            message: string `Booking confirmed for ${nights} night(s)`,
+            totalCost: cost,
+            status: "CONFIRMED"
+        };
     }
 
     remote function create_users(stream<User, grpc:Error?> clientStream) returns UserSummary {
@@ -128,4 +175,14 @@ service "RentalService" on new grpc:Listener(9090) {
         Property[] empty = [];
         return empty.toStream();
     }
+}
+
+function daysBetween(string startDate, string endDate) returns int {
+    int sy = checkpanic int:fromString(startDate.substring(0, 4));
+    int sm = checkpanic int:fromString(startDate.substring(5, 7));
+    int sd = checkpanic int:fromString(startDate.substring(8, 10));
+    int ey = checkpanic int:fromString(endDate.substring(0, 4));
+    int em = checkpanic int:fromString(endDate.substring(5, 7));
+    int ed = checkpanic int:fromString(endDate.substring(8, 10));
+    return (ey - sy) * 365 + (em - sm) * 30 + (ed - sd);
 }
