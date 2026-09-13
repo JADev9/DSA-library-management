@@ -1,0 +1,65 @@
+ syntax = "proto3";
+
+service RentalService {
+    rpc add_property(Property) returns (PropertyResponse);
+    rpc update_property(Property) returns (PropertyResponse);
+    rpc remove_property(PropertyId) returns (PropertyResponse);
+    rpc search_property(SearchRequest) returns (PropertyResponse);
+    rpc book_property(BookingRequest) returns (BookingResponse);
+    rpc confirm_booking(BookingId) returns (BookingResponse);
+
+    rpc create_users(stream User) returns (UserSummary);
+    rpc list_available_properties(SearchRequest) returns (stream Property);
+}
+
+message Property {
+    string propertyId = 1;
+    string name = 2;
+    string location = 3;
+    double pricePerNight = 4;
+    bool available = 5;
+}
+
+message PropertyId {
+    string propertyId = 1;
+}
+
+message SearchRequest {
+    string location = 1;
+}
+
+message PropertyResponse {
+    bool success = 1;
+    string message = 2;
+    Property property = 3;
+}
+
+message BookingRequest {
+    string bookingId = 1;
+    string propertyId = 2;
+    string userId = 3;
+    string startDate = 4;
+    string endDate = 5;
+}
+
+message BookingResponse {
+    bool success = 1;
+    string message = 2;
+    double totalCost = 3;
+    string status = 4;
+}
+
+message BookingId {
+    string bookingId = 1;
+}
+
+message User {
+    string userId = 1;
+    string name = 2;
+    string role = 3;
+}
+
+message UserSummary {
+    int32 usersCreated = 1;
+    string message = 2;
+}
