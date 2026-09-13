@@ -188,9 +188,19 @@ service "RentalService" on new grpc:Listener(9090) {
         };
     }
 
-    remote function list_available_properties(SearchRequest value) returns stream<Property, error?> {
-        Property[] empty = [];
-        return empty.toStream();
+        remote function list_available_properties(SearchRequest value) returns stream<Property, error?> {
+
+        Property[] results = [];
+
+        foreach Property p in propertyStore {
+            if p.available {
+                if value.location == "" || p.location == value.location {
+                    results.push(p);
+                }
+            }
+        }
+
+        return results.toStream();
     }
 }
 
