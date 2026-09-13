@@ -167,8 +167,25 @@ service "RentalService" on new grpc:Listener(9090) {
         };
     }
 
-    remote function create_users(stream<User, grpc:Error?> clientStream) returns UserSummary {
-        return {usersCreated: 0, message: "not implemented"};
+        remote function create_users(stream<User, grpc:Error?> clientStream) returns UserSummary {
+
+        int count = 0;
+
+        error? e = clientStream.forEach(function(User u) {
+            count += 1;
+        });
+
+        if e is error {
+            return {
+                usersCreated: count,
+                message: string `Error while reading stream: ${e.message()}`
+            };
+        }
+
+        return {
+            usersCreated: count,
+            message: string `Registered ${count} user(s)`
+        };
     }
 
     remote function list_available_properties(SearchRequest value) returns stream<Property, error?> {
